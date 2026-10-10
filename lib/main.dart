@@ -1,6 +1,6 @@
-// точка входа - тема приложения и первый экран
+// точка входа
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
+import 'router.dart';
 
 void main() => runApp(const BookNestApp());
 
@@ -9,18 +9,38 @@ class BookNestApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // вся палитра считается из 1 цвета
-    // vibrant = цвета насыщеннее. seedColor + hot reload = перекрасится всё
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF3A46D6),
+    // вся палитра сначала считается из 1 цвета
+    final base = ColorScheme.fromSeed(
+      seedColor: const Color(0xFFB01356),
       dynamicSchemeVariant: DynamicSchemeVariant.vibrant,
     );
 
-    return MaterialApp(
+    final scheme = base.copyWith(
+      surface: const Color(0xFFF6ECDD),
+      surfaceContainerLow: const Color(0xFFEBDCC4),
+      outline: const Color(0xFFB01356),
+      primary: const Color(0xFFB01356),
+      onPrimary: const Color(0xFFF6ECDD),
+      primaryContainer: const Color(0xFFE9BCC9),
+      onPrimaryContainer: const Color(0xFF4A0620),
+      secondary: const Color(0xFF8C6B4F),
+      onSecondary: const Color(0xFFF6ECDD),
+      secondaryContainer: const Color(0xFFE3D2B8),
+      onSecondaryContainer: const Color(0xFF3A2A12),
+      tertiary: const Color(0xFFD46A93),
+      onTertiary: const Color(0xFF4A0620),
+      tertiaryContainer: const Color(0xFFF3CFE0),
+      onTertiaryContainer: const Color(0xFF4A0620),
+    );
+
+    return MaterialApp.router(
       title: 'BookNest',
-      debugShowCheckedModeBanner: false, // убираю ленту DEBUG
-      theme: ThemeData(colorScheme: scheme),
-      home: const LoginScreen(), // первый экран - вход
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: scheme,
+        scaffoldBackgroundColor: scheme.surface,
+      ),
+      routerConfig: router,
     );
   }
 }
