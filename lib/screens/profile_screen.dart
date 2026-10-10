@@ -1,22 +1,50 @@
 // профиль
-// аватар с инициалами, имя, e-mail, статистика, выход
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/mock_data.dart';
-import 'login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _logout(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Выйти из аккаунта?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('Нет'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text('Да, выйти'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok == true && context.mounted) {
+      context.go('/login');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
-    // статистика считается из данных: считаю только не возвращённые обмены
-    final lentNow = loans.where((l) => iLent(l) && l.status != 'returned').length;
-    final borrowedNow = loans.where((l) => !iLent(l) && l.status != 'returned').length;
+    int lentNow = 0;
+    int borrowedNow = 0;
+    for (var l in loans) {
+      if (l.status == 'returned') continue; // возвращённые не считаем
+      if (iLent(l)) {
+        lentNow++;
+      } else {
+        borrowedNow = borrowedNow + 1;
+      }
+    }
 
-    // Expanded, чтобы три цифры делили ширину поровну
     Widget stat(String value, String label) => Expanded(
           child: Column(children: [
             Text(value, style: t.headlineMedium),
@@ -27,24 +55,17 @@ class ProfileScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // заголовок слева, кнопка выхода справа
         Row(
           children: [
             Expanded(child: Text('Профиль', style: t.headlineMedium)),
             IconButton(
               icon: const Icon(Icons.logout),
               tooltip: 'Выйти',
-              // уходим на вход и стираем историю экранов, чтобы назад не вернул
-              onPressed: () => Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              ),
+              onPressed: () => _logout(context),
             ),
           ],
         ),
         const SizedBox(height: 24),
-        // имя слева, аватар справа
         Row(
           children: [
             Expanded(
@@ -52,7 +73,7 @@ class ProfileScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(people[currentUserId]!, style: t.titleLarge),
-                  const Text('CR-233'),
+                  const Text('CR-232'),
                   Text('eduard@booknest.app', style: TextStyle(color: s.onSurfaceVariant)),
                 ],
               ),
@@ -65,7 +86,6 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 32),
-        // три цифры в ряд
         Row(
           children: [
             stat('${myBooks.length}', 'книг'),
