@@ -15,7 +15,6 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0; // какая вкладка открыта сейчас
 
-  // сами экраны остаются Stateless
   final _pages = const [
     LibraryScreen(),
     CommunityScreen(),
@@ -26,7 +25,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // SafeArea - чтобы меню не залезало под статус-бар
+      // чтоб меню не залезало под статус-бар
       body: SafeArea(
         child: Column(
           children: [
@@ -42,7 +41,6 @@ class _HomeShellState extends State<HomeShell> {
                 NavigationDestination(icon: Icon(Icons.person_outline), label: 'Я'),
               ],
             ),
-            // остальное место занимает выбранный экран
             Expanded(child: _pages[_index]),
           ],
         ),
