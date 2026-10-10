@@ -1,29 +1,39 @@
 //  карточка книги
 // автор, жанр, обложка, статус (доступна / выдана)
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/mock_data.dart';
 import '../widgets/book_cover.dart';
 import '../widgets/status_badge.dart';
-import 'book_form_screen.dart';
+import '../widgets/paper_background.dart';
 
 class BookDetailsScreen extends StatelessWidget {
-  final Book book; // какую книгу показываем, приходит из списка
-  const BookDetailsScreen({super.key, required this.book});
+  final int id;
+  const BookDetailsScreen({super.key, required this.id});
 
   @override
   Widget build(BuildContext context) {
+    final book = bookById(id); // ищу книгу по id прямо в экране
     final s = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
     final mine = book.ownerId == currentUserId; // моя книга или чужая
-    final free = book.status == BookStatus.available;
-    final loan = activeLoanOf(book.id); // если книга выдана, тут будет обмен
+    bool free = false;
+    if (book.status == BookStatus.available) free = true;
+    final loan = activeLoanOf(book.id);
+
+    String ownerName;
+    if (mine) {
+      ownerName = 'Я';
+    } else {
+      ownerName = people[book.ownerId]!;
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('О книге')),
-      body: ListView(
+      // этот экран не во вкладках, поэтому бумагу добавляю тут отдельно
+      body: PaperBackground(child: ListView(
         children: [
-          // цветной блок: текст слева, обложка справа
           Container(
             color: s.primaryContainer,
             padding: const EdgeInsets.all(20),
@@ -47,7 +57,6 @@ class BookDetailsScreen extends StatelessWidget {
               ],
             ),
           ),
-          // инфо строками. ListTile - готовая строка: иконка, текст, подпись
           ListTile(
             leading: const Icon(Icons.category_outlined),
             title: Text(book.genre),
@@ -55,10 +64,9 @@ class BookDetailsScreen extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.person_outline),
-            title: Text(mine ? 'Я' : people[book.ownerId]!), // ! = точно не null
+            title: Text(ownerName),
             subtitle: const Text('Владелец'),
           ),
-          // эта строка есть только если книга выдана
           if (loan != null)
             ListTile(
               leading: const Icon(Icons.event_outlined),
@@ -67,22 +75,24 @@ class BookDetailsScreen extends StatelessWidget {
             ),
           Padding(
             padding: const EdgeInsets.all(20),
-            // для своей книги - "Редактировать", для чужой - "Запросить"
             child: mine
                 ? OutlinedButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => BookFormScreen(book: book)),
-                    ),
+                    onPressed: () => context.push('/books/${book.id}/edit'),
                     child: const Text('Редактировать'),
                   )
                 : FilledButton(
-                    onPressed: free ? () {} : null, // null = кнопка серая и не нажимается
+                    onPressed: free
+                        ? () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Запрос отправлен: ${book.title}')),
+                            );
+                          }
+                        : null, // null = кнопка серая и не нажимается
                     child: Text(free ? 'Запросить книгу' : 'Сейчас на руках'),
                   ),
           ),
         ],
-      ),
+      )),
     );
   }
 }
