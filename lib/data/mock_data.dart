@@ -9,7 +9,7 @@ class Book {
   final String title;
   final String author;
   final String genre;
-  final String coverUrl; // обложку рисую сам
+  final String coverUrl; // обложк
   final BookStatus status;
 
   const Book(this.id, this.ownerId, this.title, this.author, this.genre,
@@ -17,7 +17,7 @@ class Book {
 }
 
 // обмен
-// status: 'active' (идёт), 'overdue' (просрочен), 'returned' (вернули)
+// cnenc
 class Loan {
   final int id;
   final int bookId;
@@ -26,7 +26,6 @@ class Loan {
   final DateTime dueDate; // до какого числа вернуть
   final String status;
 
-  // тут нет const, потому что DateTime const быть не может
   Loan(this.id, this.bookId, this.borrowerId, this.startDate, this.dueDate,
       this.status);
 }
@@ -75,18 +74,13 @@ const communityBooks = [
   Book(23, 4, 'Маленький принц', 'Антуан де Сент-Экзюпери', 'Классика', '', BookStatus.lent),
 ];
 
-// один общий список, чтобы искать книгу по id
 final allBooks = [...myBooks, ...communityBooks];
 
-// дата "сегодня + shift дней" (минус = в прошлом)
 DateTime _day(int shift) {
   final n = DateTime.now();
   return DateTime(n.year, n.month, n.day + shift);
 }
 
-// Loan(id, bookId, borrowerId, старт, срок, статус)
-// даты считаю от сегодня, чтобы просрочка всегда была нормальной
-// первые три - я выдал (borrowerId не я), следующие три - я взял (borrowerId = 1)
 final loans = [
   Loan(1, 2, 3, _day(-10), _day(4), 'active'),
   Loan(2, 4, 2, _day(-20), _day(1), 'active'),
@@ -106,10 +100,8 @@ final loans = [
 // найти книгу по id
 Book bookById(int id) => allBooks.firstWhere((b) => b.id == id);
 
-// если брал не я - значит выдал я
 bool iLent(Loan l) => l.borrowerId != currentUserId;
 
-// текущий не возвращённыйобмен по книге, или null если такого нет
 Loan? activeLoanOf(int bookId) {
   for (final l in loans) {
     if (l.bookId == bookId && l.status != 'returned') return l;
@@ -118,7 +110,6 @@ Loan? activeLoanOf(int bookId) {
 }
 
 // сколько дней осталось до срока
-// беру UTC, чтобы переход на зимнее/летнее время не ломал
 int daysLeft(Loan l) {
   final n = DateTime.now();
   final today = DateTime.utc(n.year, n.month, n.day);

@@ -1,5 +1,4 @@
 // статус книги - доступна / выдана
-// список книг (через BookCard) и карточка книги
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart';
 

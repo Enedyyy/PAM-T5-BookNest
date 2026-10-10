@@ -1,9 +1,6 @@
 // widgets/book_card.dart - карточка книги для списков
-// Используется на трёх экранах: Моя полка, Сообщество, Обмены
-// Что отличается на экранах, передаю параметрами:
-//   onTap      - что будет по нажатию
-//   footer     - виджет под текстом (кнопка "Запросить", инфо об обмене)
-//   showStatus - показывать штамп статуса или нет
+// используется на трёх экранах - Моя полка, Сообщество, Обмены
+
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart';
 import 'book_cover.dart';
@@ -32,9 +29,8 @@ class BookCard extends StatelessWidget {
       elevation: 0,
       margin: EdgeInsets.zero,
       color: s.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias, // чтобы нажатие не вылезало за углы
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
-        // слева большое скругление, справа почти прямо
         borderRadius: const BorderRadius.horizontal(
           left: Radius.circular(18),
           right: Radius.circular(3),
@@ -48,14 +44,13 @@ class BookCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // текст слева. чтобы длинное название не вылезало
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       book.title,
-                      maxLines: 2, // не больше двух строк
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                     ),
@@ -64,7 +59,6 @@ class BookCard extends StatelessWidget {
                       style: t.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
                     ),
                     const SizedBox(height: 8),
-                    // Wrap - как Row, но переносит на новую строку если не влезло
                     Wrap(
                       spacing: 12,
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -73,7 +67,6 @@ class BookCard extends StatelessWidget {
                         if (showStatus) StatusBadge(status: book.status),
                       ],
                     ),
-                    // если передали footer - показываем его снизу
                     if (footer != null) ...[
                       const SizedBox(height: 10),
                       footer!,

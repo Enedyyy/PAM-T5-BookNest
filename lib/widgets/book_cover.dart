@@ -4,7 +4,7 @@ import '../data/mock_data.dart';
 
 class BookCover extends StatelessWidget {
   final Book book;
-  final double width; // высоту считаю от ширины, так можно делать маленькую и большую
+  final double width;
 
   const BookCover({super.key, required this.book, this.width = 60});
 
@@ -14,7 +14,7 @@ class BookCover extends StatelessWidget {
 
     final bg = [s.primary, s.tertiary, s.secondary];
     final fg = [s.onPrimary, s.onTertiary, s.onSecondary];
-    final i = book.id % 3; // по id выбираю цвет, у одной книги он всегда один
+    final i = book.id % 3;
 
     return Container(
       width: width,
@@ -28,11 +28,10 @@ class BookCover extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // буква по центру, Expanded забирает всё место кроме полоски
           Expanded(
             child: Center(
               child: Text(
-                book.title.substring(0, 1), // первая буква названия
+                book.title.substring(0, 1),
                 style: Theme.of(context)
                     .textTheme
                     .headlineMedium
@@ -40,7 +39,6 @@ class BookCover extends StatelessWidget {
               ),
             ),
           ),
-          // тёмная полоска корешка справа
           Container(width: width * 0.1, color: fg[i].withValues(alpha: 0.25)),
         ],
       ),
