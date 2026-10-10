@@ -1,9 +1,8 @@
 // "книги, доступные у других"
-// список чужих свободных книг, у каждой владелец и кнопка "Запросить"
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/mock_data.dart';
 import '../widgets/book_card.dart';
-import 'book_details_screen.dart';
 
 class CommunityScreen extends StatelessWidget {
   const CommunityScreen({super.key});
@@ -12,8 +11,12 @@ class CommunityScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
-    // беру только свободные книги
-    final books = communityBooks.where((b) => b.status == BookStatus.available).toList();
+    List<Book> books = [];
+    for (var b in communityBooks) {
+      if (b.status == BookStatus.available) {
+        books.add(b);
+      }
+    }
 
     return Column(
       children: [
@@ -31,15 +34,10 @@ class CommunityScreen extends StatelessWidget {
             separatorBuilder: (context, i) => const SizedBox(height: 10),
             itemBuilder: (context, i) {
               final book = books[i];
-              // тот же BookCard, что и на полке, только с footer
               return BookCard(
                 book: book,
                 showStatus: false, // тут все книги свободны, штамп не нужен
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => BookDetailsScreen(book: book)),
-                ),
-                // внизу: чья книга слева, кнопка справа
+                onTap: () => context.push('/books/${book.id}'),
                 footer: Row(
                   children: [
                     Icon(Icons.person_outline, size: 18, color: s.primary),
@@ -48,7 +46,11 @@ class CommunityScreen extends StatelessWidget {
                       child: Text(people[book.ownerId]!, overflow: TextOverflow.ellipsis),
                     ),
                     FilledButton.tonal(
-                      onPressed: () {}, // нэма пока запроса
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Запрос отправлен: ' + book.title)),
+                        );
+                      },
                       child: const Text('Запросить'),
                     ),
                   ],

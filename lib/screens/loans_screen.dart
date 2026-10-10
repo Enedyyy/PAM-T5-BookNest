@@ -1,20 +1,26 @@
 // "Мои обмены"
-// один список-  и выданные мной, и взятые мной книги, у каждой срок возврата
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/mock_data.dart';
 import '../widgets/book_card.dart';
-import 'book_details_screen.dart';
 
 class LoansScreen extends StatelessWidget {
   const LoansScreen({super.key});
 
   // текст про срок для одного обмена
   String dueText(Loan l) {
-    final left = daysLeft(l); // сколько дней осталось
-    if (l.status == 'returned') return 'Возвращена';
-    if (l.status == 'overdue') return 'Просрочена на ${-left} дн.';
-    if (left == 0) return 'Вернуть сегодня';
-    return 'Вернуть до ${shortDate(l.dueDate)}, осталось $left дн.';
+    var left = daysLeft(l);
+    var text = '';
+    if (l.status == 'returned') {
+      text = 'Возвращена';
+    } else if (l.status == 'overdue') {
+      text = 'Просрочена на ' + (left * -1).toString() + ' дн.';
+    } else if (left == 0) {
+      text = 'Вернуть сегодня';
+    } else {
+      text = 'Вернуть до ${shortDate(l.dueDate)}, осталось $left дн.';
+    }
+    return text;
   }
 
   @override
@@ -40,20 +46,15 @@ class LoansScreen extends StatelessWidget {
               final loan = loans[i];
               final book = bookById(loan.bookId); // по id находим саму книгу
               final lent = iLent(loan);
-              // второй участник: если я выдал - тот кто взял, иначе - владелец
               final other = people[lent ? loan.borrowerId : book.ownerId]!;
 
               return BookCard(
                 book: book,
                 showStatus: false, // важнее срок, чем статус
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => BookDetailsScreen(book: book)),
-                ),
+                onTap: () => context.push('/books/${book.id}'),
                 footer: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // срок; просрочка красным
                     Text(
                       dueText(loan),
                       style: TextStyle(
