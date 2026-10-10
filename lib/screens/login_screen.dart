@@ -1,31 +1,53 @@
 //  вход / регистрация
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'home_shell.dart';
+import 'package:go_router/go_router.dart';
+import '../widgets/paper_background.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
+  }
+
+  void _login() {
+    var isOk = _formKey.currentState!.validate();
+    if (isOk == false) {
+      return;
+    }
+    // логин полностью уходит из стека наче назад
+    // вернуло бы уже вошедшего пользователя обратно на вход
+    context.go('/library');
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
-    // высоты "книг" для полки
     final heights = [90.0, 120.0, 80.0, 110.0, 100.0, 75.0, 115.0];
-    // цвета книг
     final colors = [s.onPrimary, s.tertiaryContainer, s.secondaryContainer];
 
     return Scaffold(
-      // значки статус-бара светлые, иначе на синем их не видно
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        child: ListView(
+        child: PaperBackground(child: ListView(
           padding: EdgeInsets.zero, // без этого ListView сам добавит отступ сверху
           children: [
-            // синий блок сверху
             Container(
               width: double.infinity,
-              // отступ сверху иначе полка прилипает к низу
               padding: EdgeInsets.fromLTRB(28, MediaQuery.of(context).padding.top + 36, 28, 0),
               decoration: BoxDecoration(
                 color: s.primary,
@@ -36,10 +58,7 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   Text('BookNest', style: t.displaySmall?.copyWith(color: s.onPrimary)),
                   const SizedBox(height: 6),
-                  Text(
-                    'Книги должны ходить по рукам',
-                    style: t.titleMedium?.copyWith(color: s.primaryContainer),
-                  ),
+                  Text('..............', style: t.titleMedium?.copyWith(color: s.primaryContainer)),
                   const SizedBox(height: 32),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -53,54 +72,72 @@ class LoginScreen extends StatelessWidget {
                         ),
                     ],
                   ),
-                  // доска, на которой стоят книги
                   Container(height: 10, color: s.onPrimary),
                 ],
               ),
             ),
-            // форма входа
             Padding(
               padding: const EdgeInsets.all(28),
-              child: Column(
-                children: [
-                  const TextField(
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'E-mail',
-                      suffixIcon: Icon(Icons.alternate_email), // иконка справа
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const TextField(
-                    obscureText: true, // вместо букв точки
-                    decoration: InputDecoration(
-                      labelText: 'Пароль',
-                      suffixIcon: Icon(Icons.lock_outline),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  SizedBox(
-                    width: double.infinity, // кнопка на всю ширину
-                    child: FilledButton(
-                      //  идем дальше на главный экран
-                      onPressed: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const HomeShell()),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'E-mail',
+                        suffixIcon: Icon(Icons.alternate_email),
+                        border: OutlineInputBorder(),
                       ),
-                      child: const Text('Войти'),
+                      // непустой + похож на почту. regex необязателен
+                      validator: (v) {
+                        if (v == null) {
+                          return 'E-mail обязателен';
+                        }
+                        if (v.trim() == '') {
+                          return 'E-mail обязателен';
+                        }
+                        if (v.contains('@') == false) {
+                          return 'Похоже, это не e-mail';
+                        }
+                        return null; // null значит всё ок
+                      },
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {}, // регистрация пока ничего не делает
-                    child: const Text('Нет аккаунта? Зарегистрируйтесь'),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passCtrl,
+                      obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        labelText: 'Пароль',
+                        suffixIcon: Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.length < 6) {
+                          return 'Минимум 6 символов';
+                        } else {
+                          return null;
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(onPressed: _login, child: const Text('Войти')),
+                    ),
+                    TextButton(
+                      onPressed: () {}, // регистрация пока ничего не делает
+                      child: const Text('Нет аккаунта? Зарегистрируйтесь'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
-        ),
+        )),
       ),
     );
   }
