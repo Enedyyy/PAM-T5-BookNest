@@ -36,6 +36,7 @@ class _BookFormScreenState extends State<BookFormScreen> {
   }
 
   void _save() {
+    if (_formKey.currentState!.validate() == false) return;
     String name = _titleCtrl.text;
     name = name.trim();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Сохранено: ' + name)));
