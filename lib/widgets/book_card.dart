@@ -2,7 +2,7 @@
 // используется на трёх экранах - Моя полка, Сообщество, Обмены
 
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
+import '../data/book.dart';
 import 'book_cover.dart';
 import 'status_badge.dart';
 

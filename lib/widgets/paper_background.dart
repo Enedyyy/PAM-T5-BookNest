@@ -8,7 +8,7 @@ class PaperBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
-    // CustomPaint рисует painter ПОД child, поэтому линии будут сзади,
+    // CustomPaint рисует painter child, поэтому линии будут сзади,
     // а карточки и текст сверху их перекроют
     return CustomPaint(
       painter: PaperPainter(
@@ -32,7 +32,6 @@ class PaperPainter extends CustomPainter {
     linePaint.color = lineColor;
     linePaint.strokeWidth = 1;
 
-    // горизонтальные линии каждые 28 пикселей, на глаз,
     for (double y = 28; y < size.height; y = y + 28) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
     }

@@ -1,6 +1,6 @@
 // "обложка": картинок нет
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
+import '../data/book.dart';
 
 class BookCover extends StatelessWidget {
   final Book book;

@@ -1,6 +1,6 @@
 // статус книги - доступна / выдана
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
+import '../data/book.dart';
 
 class StatusBadge extends StatelessWidget {
   final BookStatus status;

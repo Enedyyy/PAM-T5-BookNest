@@ -1,8 +1,28 @@
-// точка входа
+// точка входа + корень композиции
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'router.dart';
+import 'data/mock_book_repository.dart';
+import 'data/mock_loan_repository.dart';
+import 'models/books_model.dart';
+import 'models/loans_model.dart';
 
-void main() => runApp(const BookNestApp());
+void main() {
+  final bookRepository = MockBookRepository();
+  final loanRepository = MockLoanRepository();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<MockBookRepository>.value(value: bookRepository),
+        Provider<MockLoanRepository>.value(value: loanRepository),
+        ChangeNotifierProvider(create: (_) => BooksModel(bookRepository)..load()),
+        ChangeNotifierProvider(create: (_) => LoansModel(loanRepository)..load()),
+      ],
+      child: const BookNestApp(),
+    ),
+  );
+}
 
 class BookNestApp extends StatelessWidget {
   const BookNestApp({super.key});
@@ -39,6 +59,12 @@ class BookNestApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: scheme,
         scaffoldBackgroundColor: scheme.surface,
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: scheme.primary,
+          contentTextStyle: TextStyle(color: scheme.onPrimary),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       ),
       routerConfig: router,
     );
