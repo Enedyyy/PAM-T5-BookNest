@@ -28,8 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (isOk == false) {
       return;
     }
-    // логин полностью уходит из стека наче назад
-    // вернуло бы уже вошедшего пользователя обратно на вход
+
     context.go('/library');
   }
 
@@ -44,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
         child: PaperBackground(child: ListView(
-          padding: EdgeInsets.zero, // без этого ListView сам добавит отступ сверху
+          padding: EdgeInsets.zero,
           children: [
             Container(
               width: double.infinity,
@@ -68,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 22,
                           height: heights[i],
                           margin: const EdgeInsets.only(right: 3),
-                          color: colors[i % colors.length], // цвета по кругу
+                          color: colors[i % colors.length],
                         ),
                     ],
                   ),
@@ -91,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         suffixIcon: Icon(Icons.alternate_email),
                         border: OutlineInputBorder(),
                       ),
-                      // непустой + похож на почту. regex необязателен
                       validator: (v) {
                         if (v == null) {
                           return 'E-mail обязателен';
@@ -102,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (v.contains('@') == false) {
                           return 'Похоже, это не e-mail';
                         }
-                        return null; // null значит всё ок
+                        return null;
                       },
                     ),
                     const SizedBox(height: 16),
@@ -129,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: FilledButton(onPressed: _login, child: const Text('Войти')),
                     ),
                     TextButton(
-                      onPressed: () {}, // регистрация пока ничего не делает
+                      onPressed: () {},
                       child: const Text('Нет аккаунта? Зарегистрируйтесь'),
                     ),
                   ],
