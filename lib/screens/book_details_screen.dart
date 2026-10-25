@@ -1,9 +1,15 @@
 //  карточка книги
-// автор, жанр, обложка, статус (доступна / выдана)
+// по-прежнему получает только id из адреса, но ищет книгу через модель
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../data/mock_data.dart';
+import 'package:provider/provider.dart';
+import '../data/book.dart';
+import '../data/dates.dart';
+import '../data/session.dart';
+import '../models/books_model.dart';
+import '../models/loans_model.dart';
 import '../widgets/book_cover.dart';
+import '../widgets/error_view.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/paper_background.dart';
 
@@ -11,27 +17,81 @@ class BookDetailsScreen extends StatelessWidget {
   final int id;
   const BookDetailsScreen({super.key, required this.id});
 
+  Future<void> _request(BuildContext context, Book book) async {
+    final error = await context.read<LoansModel>().request(book);
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    final error2 = await context.read<BooksModel>().update(book.copyWith(status: BookStatus.lent));
+    if (!context.mounted) return;
+    String text = 'Запрос отправлен: ' + book.title;
+    if (error2 != null) text = error2;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  // удаление своей книги: сначала спрашиваю, потом удаляю через модель
+  Future<void> _delete(BuildContext context, Book book) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Удалить книгу?'),
+        content: Text(book.title),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Нет')),
+          FilledButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('Удалить')),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+
+    final error = await context.read<BooksModel>().remove(book.id);
+    if (!context.mounted) return; // экран мог закрыться пока ждали
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Удалено: ' + book.title)));
+    context.pop(); // книги больше нет - её экран тоже уходит
+  }
+
   @override
   Widget build(BuildContext context) {
-    final book = bookById(id); // ищу книгу по id прямо в экране
+    final books = context.watch<BooksModel>();
+    final loans = context.watch<LoansModel>();
+    final book = books.byId(id);
+
+    // книги нет в списке: или список ещё грузится, или ошибка, или такой книги нет
+    if (book == null) {
+      Widget body;
+      if (books.isLoading) {
+        body = const Center(child: CircularProgressIndicator());
+      } else if (books.error != null) {
+        body = ErrorView(message: books.error!, onRetry: () => context.read<BooksModel>().load());
+      } else {
+        body = const Center(child: Text('Книга не найдена'));
+      }
+      return Scaffold(appBar: AppBar(title: const Text('О книге')), body: body);
+    }
+
     final s = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
     final mine = book.ownerId == currentUserId; // моя книга или чужая
     bool free = false;
     if (book.status == BookStatus.available) free = true;
-    final loan = activeLoanOf(book.id);
+    final loan = loans.activeLoanOf(book.id);
 
     String ownerName;
     if (mine) {
       ownerName = 'Я';
     } else {
-      ownerName = people[book.ownerId]!;
+      ownerName = book.ownerName;
     }
 
     return Scaffold(
       appBar: AppBar(title: const Text('О книге')),
-      // этот экран не во вкладках, поэтому бумагу добавляю тут отдельно
       body: PaperBackground(child: ListView(
         children: [
           Container(
@@ -76,18 +136,25 @@ class BookDetailsScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(20),
             child: mine
-                ? OutlinedButton(
-                    onPressed: () => context.push('/books/${book.id}/edit'),
-                    child: const Text('Редактировать'),
+                ? Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => context.push('/books/${book.id}/edit'),
+                          child: const Text('Редактировать'),
+                        ),
+                      ),
+                      if (free) ...[
+                        const SizedBox(width: 12),
+                        TextButton(
+                          onPressed: () => _delete(context, book),
+                          child: Text('Удалить', style: TextStyle(color: s.error)),
+                        ),
+                      ],
+                    ],
                   )
                 : FilledButton(
-                    onPressed: free
-                        ? () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Запрос отправлен: ${book.title}')),
-                            );
-                          }
-                        : null, // null = кнопка серая и не нажимается
+                    onPressed: free ? () => _request(context, book) : null, // null = кнопка серая
                     child: Text(free ? 'Запросить книгу' : 'Сейчас на руках'),
                   ),
           ),
