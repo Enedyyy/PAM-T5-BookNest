@@ -1,7 +1,10 @@
-//  форма новой книги / редактирования
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../data/mock_data.dart';
+import 'package:provider/provider.dart';
+import '../data/book.dart';
+import '../data/session.dart';
+import '../models/books_model.dart';
 import '../widgets/paper_background.dart';
 
 class BookFormScreen extends StatefulWidget {
@@ -17,12 +20,15 @@ class _BookFormScreenState extends State<BookFormScreen> {
   late final TextEditingController _titleCtrl;
   late final TextEditingController _authorCtrl;
   String? _genre;
-
-  Book? get _book => widget.id == null ? null : bookById(widget.id!);
+  Book? _book;
+  bool _saving = false;
 
   @override
   void initState() {
     super.initState();
+    if (widget.id != null) {
+      _book = context.read<BooksModel>().byId(widget.id!);
+    }
     _titleCtrl = TextEditingController(text: _book?.title ?? '');
     _authorCtrl = TextEditingController(text: _book?.author ?? '');
     _genre = _book?.genre;
@@ -35,11 +41,32 @@ class _BookFormScreenState extends State<BookFormScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_formKey.currentState!.validate() == false) return;
     String name = _titleCtrl.text;
     name = name.trim();
+
+    setState(() => _saving = true);
+    final model = context.read<BooksModel>();
+    String? error;
+    if (_book == null) {
+      final draft = Book(0, currentUserId, currentUserName, name, _authorCtrl.text.trim(),
+          _genre!, '', BookStatus.available);
+      error = await model.add(draft);
+    } else {
+      error = await model.update(
+          _book!.copyWith(title: name, author: _authorCtrl.text.trim(), genre: _genre));
+    }
+    if (!mounted) return;
+    setState(() => _saving = false);
+
+    if (error != null) {
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Сохранено: ' + name)));
+
     context.pop();
   }
 
@@ -100,8 +127,6 @@ class _BookFormScreenState extends State<BookFormScreen> {
               },
             ),
             const SizedBox(height: 16),
-            // у выпадающего списка (DropdownButtonFormField) тоже есть validator -
-            // жанр нельзя оставить пустым
             DropdownButtonFormField<String>(
               value: _genre,
               decoration: const InputDecoration(labelText: 'Жанр'),
@@ -111,7 +136,12 @@ class _BookFormScreenState extends State<BookFormScreen> {
               validator: (v) => v == null ? 'Выберите жанр' : null,
             ),
             const SizedBox(height: 24),
-            FilledButton(onPressed: _save, child: const Text('Сохранить')),
+            FilledButton(
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Сохранить'),
+            ),
           ],
         ),
       )),
